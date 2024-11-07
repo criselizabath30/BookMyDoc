@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>List of Doctors</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f7fc;
+            color: #333;
+        }
+
+        header {
+            background-color: #007bff;
+            color: white;
+            padding: 20px 0;
+            text-align: center;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 36px;
+        }
+
+        .container {
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        table {
+            width: 100%;
+            margin-top: 20px;
+            border-collapse: collapse;
+            background-color: #fff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #007bff;
+            color: white;
+        }
+
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        .book-btn {
+            background-color: #28a745;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s ease;
+        }
+
+        .book-btn:hover {
+            background-color: #218838;
+        }
+
+        .book-btn:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+
+        .doctor-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: white;
+            padding: 20px;
+            margin: 10px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .doctor-info {
+            max-width: 80%;
+        }
+
+        .doctor-info h3 {
+            margin: 0;
+            color: #333;
+            font-size: 24px;
+        }
+
+        .doctor-info p {
+            margin: 5px 0;
+            color: #777;
+            font-size: 16px;
+        }
+
+        .doctor-action {
+            text-align: center;
+        }
+
+        .doctor-action button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+
+        .doctor-action button:hover {
+            background-color: #0056b3;
+        }
+
+        .doctor-action button:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>List of Doctors</h1>
+    </header>
+
+    <div class="container">
+        <div id="doctor-list"></div> <!-- Doctors will be displayed here -->
+    </div>
+
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDXu2OHlDkDYM3w_2cgFmz-VP4laOJt4qY",
+            authDomain: "bookmydoc-5837e.firebaseapp.com",
+            projectId: "bookmydoc-5837e",
+            storageBucket: "bookmydoc-5837e.firebasestorage.app",
+            messagingSenderId: "631008015181",
+            appId: "1:631008015181:web:95981fc14bca7e7f01fd04"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+
+        // Initialize Firestore
+        const db = firebase.firestore();
+
+        // Get the reference to where doctor data will be displayed
+        const doctorListElement = document.getElementById("doctor-list");
+
+        // Fetch doctors from Firestore and display them
+        db.collection("doctors").get().then((querySnapshot) => {
+            querySnapshot.forEach((doc) => {
+                const doctorData = doc.data();
+
+                // Create a new card for each doctor
+                const doctorCard = document.createElement("div");
+                doctorCard.classList.add("doctor-card");
+
+                doctorCard.innerHTML = `
+                    <div class="doctor-info">
+                        <h3>${doctorData.name}</h3>
+                        <p><strong>Specialization:</strong> ${doctorData.specialization}</p>
+                        <p><strong>Available Time:</strong> ${doctorData.time}</p>
+                    </div>
+                    <div class="doctor-action">
+                        <button class="book-btn" data-doctor-id="${doc.id}">Book Appointment</button>
+                    </div>
+                `;
+
+                // Append the doctor card to the list
+                doctorListElement.appendChild(doctorCard);
+            });
+
+            // Add event listeners for the booking buttons
+            const bookButtons = document.querySelectorAll(".book-btn");
+            bookButtons.forEach(button => {
+                button.addEventListener("click", (e) => {
+                    const button = e.target;
+                    const doctorId = button.getAttribute("data-doctor-id");
+
+                    // Prompt for the patient's name
+                    const patientName = prompt("Please enter your name:");
+
+                    // If patient name is provided
+                    if (patientName) {
+                        // Generate a unique booking number (for simplicity, we use the current timestamp)
+                        const bookingNumber = "B" + Date.now();  // Generate booking number using timestamp
+
+                        // Save the booking details in Firestore
+                        db.collection("bookings").add({
+                            doctorId: doctorId,
+                            patientName: patientName,
+                            bookingNumber: bookingNumber,
+                            bookedAt: firebase.firestore.FieldValue.serverTimestamp()
+                        })
+                        .then(() => {
+                            // Update the button text to 'Booked' and disable it
+                            button.textContent = "Booked";
+                            button.disabled = true;
+
+                            alert("Appointment booked successfully! Your booking number is: " + bookingNumber);
+                        })
+                        .catch((error) => {
+                            console.error("Error booking appointment: ", error);
+                            alert("Error booking appointment.");
+                        });
+                    } else {
+                        alert("Booking canceled. Patient name is required.");
+                    }
+                });
+            });
+        })
+        .catch((error) => {
+            console.error("Error retrieving doctors: ", error);
+        });
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+

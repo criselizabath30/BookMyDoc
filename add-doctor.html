@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Doctor</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Add Doctor</h1>
+        <form id="doctor-form">
+            <input type="text" id="doctor-name" placeholder="Doctor Name" required>
+            <input type="text" id="doctor-specialization" placeholder="Specialization" required>
+            <input type="text" id="doctor-time" placeholder="Available Time" required>
+            <button type="submit">Add Doctor</button>
+        </form>
+    </div>
+
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+  apiKey: "AIzaSyDXu2OHlDkDYM3w_2cgFmz-VP4laOJt4qY",
+  authDomain: "bookmydoc-5837e.firebaseapp.com",
+  projectId: "bookmydoc-5837e",
+  storageBucket: "bookmydoc-5837e.firebasestorage.app",
+  messagingSenderId: "631008015181",
+  appId: "1:631008015181:web:95981fc14bca7e7f01fd04",
+ // measurementId: "G-EBNC2TMW37"
+};
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+
+        // Initialize Firestore
+        const db = firebase.firestore();
+
+        // Form submit event listener to add doctor data
+        document.getElementById("doctor-form").addEventListener("submit", (e) => {
+            e.preventDefault();
+
+            const doctorName = document.getElementById("doctor-name").value;
+            const doctorSpecialization = document.getElementById("doctor-specialization").value;
+            const doctorTime = document.getElementById("doctor-time").value;
+
+            // Save doctor details to Firestore
+            db.collection("doctors").add({
+                name: doctorName,
+                specialization: doctorSpecialization,
+                time: doctorTime
+            })
+            .then(() => {
+                alert("Doctor added successfully!");
+                // Reset the form
+                document.getElementById("doctor-form").reset();
+            })
+            .catch((error) => {
+                alert("Error adding doctor: " + error.message);
+            });
+        });
+    </script>
+</body>
+</html>
